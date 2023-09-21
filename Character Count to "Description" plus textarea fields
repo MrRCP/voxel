@@ -1,0 +1,50 @@
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Function to create a character count container for a field
+    function createCharCountContainer(field, maxCharCount, threshold) {
+        var container = document.createElement('div');
+        container.classList.add('char-count-container');
+        field.parentNode.insertBefore(container, field.nextSibling);
+        var count = document.createElement('div');
+        count.classList.add('char-count', 'black');
+        count.textContent = '0/' + maxCharCount;
+        container.appendChild(count);
+
+        function updateCharCount() {
+            // Check if the field is a contentEditable div
+            if (field.contentEditable === 'true') {
+                var charCount = field.textContent.trim().length;
+                count.textContent = charCount + '/' + maxCharCount;
+            } else {
+                var charCount = field.value.trim().length; // Use .value for textareas
+                count.textContent = charCount + '/' + maxCharCount;
+            }
+
+            if (charCount >= threshold && charCount < (maxCharCount + 1)) {
+                count.classList.remove('black', 'red');
+                count.classList.add('orange');
+            } else if (charCount >= maxCharCount) {
+                count.classList.remove('black', 'orange');
+                count.classList.add('red');
+            } else {
+                count.classList.remove('orange', 'red');
+                count.classList.add('black');
+            }
+        }
+
+        field.addEventListener('input', updateCharCount);
+
+        // Use "change" event for textareas in case input event doesn't cover all changes
+        if (field.tagName === 'TEXTAREA') {
+            field.addEventListener('change', updateCharCount);
+        }
+    }
+
+    // Example usage for two different fields with different character limits and thresholds
+    var field1 = document.querySelector('.field-key-description .mce-content-body');
+    createCharCountContainer(field1, 500, 450);
+
+    var field2 = document.querySelector('.field-key-the_excerpt textarea'); // Change to textarea selector
+    createCharCountContainer(field2, 160, 120);
+});
+</script>
