@@ -2,9 +2,12 @@
 //I recommend putting everything between the style tags in your Appearance > Customizer > Custom CSS OR under Elementor > Site Settings > Custom CSS location.
 //You can then remove the start and ending style tags from the code.
 
-function add_character_count_script() {
-    ?>
- <style>
+function loggedin_function() {
+	if (is_user_logged_in()) {
+
+		function add_character_count_script() {
+?>
+<style>
 .char-count-container {
     display: flex;
     justify-content: flex-end;
@@ -40,41 +43,65 @@ function add_character_count_script() {
     margin-left: 5px;
 }
 </style>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var field = document.querySelector('.elementor-9 .elementor-element.elementor-element-095c15d .ts-form-group .mce-content-body');
-    var container = document.createElement('div');
-    container.classList.add('char-count-container');
-    field.parentNode.insertBefore(container, field.nextSibling);
-    var count = document.createElement('div');
-    count.classList.add('char-count', 'black');
-    count.textContent = '0/350';
-    container.appendChild(count);
+	document.addEventListener('DOMContentLoaded', function() {
+		// Check if one of the specified classes exists on the page
+		if (document.querySelector('.field-key-description') || document.querySelector('.field-key-the_excerpt')) {
 
-    field.addEventListener('input', function() {
-        var charCount = this.textContent.trim().length;
-        var maxCharCount = 350;
-        count.textContent = charCount + '/' + maxCharCount;
+			// Function to create a character count container for a field
+			function createCharCountContainer(field, maxCharCount, threshold) {
+				var container = document.createElement('div');
+				container.classList.add('char-count-container');
+				field.parentNode.insertBefore(container, field.nextSibling);
+				var count = document.createElement('div');
+				count.classList.add('char-count', 'black');
+				count.textContent = '0/' + maxCharCount;
+				container.appendChild(count);
 
-        if (charCount >= 280 && charCount < maxCharCount) {
-            count.classList.remove('black', 'red');
-            count.classList.add('orange');
-            count.textContent = charCount + '/' + maxCharCount;
-        } else if (charCount >= maxCharCount) {
-            count.classList.remove('black', 'orange');
-            count.classList.add('red');
-            count.textContent = charCount + '/' + maxCharCount;
-        } else {
-            count.classList.remove('orange', 'red');
-            count.classList.add('black');
-            count.textContent = charCount + '/' + maxCharCount;
-        }
-    });
-});
+				function updateCharCount() {
+					// Check if the field is a contentEditable div
+					if (field.contentEditable === 'true') {
+						var charCount = field.textContent.trim().length;
+						count.textContent = charCount + '/' + maxCharCount;
+					} else {
+						var charCount = field.value.trim().length; // Use .value for textareas
+						count.textContent = charCount + '/' + maxCharCount;
+					}
+
+					if (charCount >= threshold && charCount < (maxCharCount + 1)) {
+						count.classList.remove('black', 'red');
+						count.classList.add('orange');
+					} else if (charCount >= maxCharCount) {
+						count.classList.remove('black', 'orange');
+						count.classList.add('red');
+					} else {
+						count.classList.remove('orange', 'red');
+						count.classList.add('black');
+					}
+				}
+
+				field.addEventListener('input', updateCharCount);
+
+				// Use "change" event for textareas in case input event doesn't cover all changes
+				if (field.tagName === 'TEXTAREA') {
+					field.addEventListener('change', updateCharCount);
+				}
+			}
+
+			// Example usage for two different fields with different character limits and thresholds
+			var field1 = document.querySelector('.field-key-description .mce-content-body');
+			createCharCountContainer(field1, 1000, 900);
+
+			var field2 = document.querySelector('.field-key-the_excerpt textarea'); // Change to textarea selector
+			createCharCountContainer(field2, 160, 120);
+		}
+	});
 </script>
 
-    <?php
-}
+<?php
+		}
+		add_action('wp_footer', 'add_character_count_script');
 
-add_action('wp_footer', 'add_character_count_script');
+	}
+}
+add_action('init', 'loggedin_function');
